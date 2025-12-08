@@ -8,13 +8,13 @@ pipeline {
 
     environment {
         // CHANGE this: Your local Laragon PHP binary
-        PHP_PATH = "C:\\laragon\\bin\\php\\php-8.2.0-Win32-vs16-x64\\php.exe"
+        PHP_PATH = "C:\\laragon\\bin\\php\\php-8.2.6-Win32-vs16-x64\\php.exe"
 
         // CHANGE this: Composer path (if installed via ComposerSetup.exe)
         COMPOSER_PATH = "C:\\ProgramData\\ComposerSetup\\bin\\composer.bat"
 
         // CHANGE this: Laragon deployment folder
-        DEPLOY_PATH = "C:\\laragon\\www\\my-laravel-app"
+        DEPLOY_PATH = "C:\\laragon\\www\\JenkinsWithLaravel"
     }
 
     stages {
