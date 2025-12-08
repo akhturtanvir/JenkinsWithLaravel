@@ -7,13 +7,13 @@ pipeline {
     }
 
     environment {
-        // CHANGE this: Your local Laragon PHP binary
+        // PHP executable from Laragon
         PHP_PATH = "C:\\laragon\\bin\\php\\php-8.2.6-Win32-vs16-x64\\php.exe"
 
-        // CHANGE this: Composer path (if installed via ComposerSetup.exe)
+        // Composer installed via ComposerSetup.exe
         COMPOSER_PATH = "C:\\ProgramData\\ComposerSetup\\bin\\composer.bat"
 
-        // CHANGE this: Laragon deployment folder
+        // Laragon project directory (deployment location)
         DEPLOY_PATH = "C:\\laragon\\www\\JenkinsWithLaravel"
     }
 
@@ -21,12 +21,13 @@ pipeline {
 
         stage('Checkout from GitHub') {
             steps {
+                echo "📥 Checking out source code..."
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: '*/main']],  // ❗ Change branch if needed
+                    branches: [[name: '*/main']],   // Change branch if needed
                     userRemoteConfigs: [[
-                        url: 'https://github.com/akhturtanvir/JenkinsWithLaravel.git',  // ❗ Change repo URL
-                        credentialsId: 'github-token'  // ❗ Add this credential in Jenkins
+                        url: 'https://github.com/akhturtanvir/JenkinsWithLaravel.git',
+                        credentialsId: 'github-token'
                     ]]
                 ])
             }
@@ -34,6 +35,7 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
+                echo "📦 Installing Composer dependencies..."
                 bat """
                     %COMPOSER_PATH% install --no-interaction --prefer-dist
                 """
@@ -42,7 +44,13 @@ pipeline {
 
         stage('Laravel Optimization') {
             steps {
+                echo "⚡ Running Laravel optimization commands..."
                 bat """
+                    %PHP_PATH% artisan config:clear
+                    %PHP_PATH% artisan cache:clear
+                    %PHP_PATH% artisan route:clear
+                    %PHP_PATH% artisan view:clear
+
                     %PHP_PATH% artisan config:cache
                     %PHP_PATH% artisan route:cache
                     %PHP_PATH% artisan view:cache
@@ -50,34 +58,38 @@ pipeline {
             }
         }
 
-        // stage('Run Tests (Optional)') {
-        //     when {
-        //         expression { fileExists('tests') }
-        //     }
-        //     steps {
-        //         bat """
-        //             %PHP_PATH% vendor\\bin\\phpunit
-        //         """
-        //     }
-        // }
-
         stage('Deploy to Laragon') {
             steps {
+                echo "🚀 Deploying updated project to Laragon..."
+
+                // Use robocopy (Windows) to sync workspace → Laragon
                 bat """
-                    echo Deploying to Laragon...
-                    robocopy . "%DEPLOY_PATH%" /MIR /XF .env /XD vendor node_modules .git
+                    robocopy . "%DEPLOY_PATH%" /MIR ^
+                    /XF .env ^
+                    /XD vendor node_modules .git
+                """
+
+                echo "🔁 Rebuilding vendor folder for deployed app..."
+                bat """
+                    cd %DEPLOY_PATH%
+                    %COMPOSER_PATH% install --no-interaction --prefer-dist
+                """
+
+                echo "🔧 Re-optimizing deployed application..."
+                bat """
+                    cd %DEPLOY_PATH%
+                    %PHP_PATH% artisan optimize
                 """
             }
         }
-
     }
 
     post {
         success {
-            echo "Laravel App Deployed Successfully!"
+            echo "🎉 SUCCESS: Laravel Application Deployed Successfully to Laragon!"
         }
         failure {
-            echo "❌ Deployment Failed"
+            echo "❌ FAILURE: Something went wrong during deployment!"
         }
     }
 }
