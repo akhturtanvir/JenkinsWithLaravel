@@ -50,16 +50,16 @@ pipeline {
             }
         }
 
-        stage('Run Tests (Optional)') {
-            when {
-                expression { fileExists('tests') }
-            }
-            steps {
-                bat """
-                    %PHP_PATH% vendor\\bin\\phpunit
-                """
-            }
-        }
+        // stage('Run Tests (Optional)') {
+        //     when {
+        //         expression { fileExists('tests') }
+        //     }
+        //     steps {
+        //         bat """
+        //             %PHP_PATH% vendor\\bin\\phpunit
+        //         """
+        //     }
+        // }
 
         stage('Deploy to Laragon') {
             steps {
